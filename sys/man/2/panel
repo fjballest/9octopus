@@ -1,0 +1,251 @@
+.TH PANEL 2
+.SH NAME
+panels \- o/mero panel library
+.SH SYNOPSIS
+.EX
+#include <u.h>
+#include <libc.h>
+#include <thread.h>
+#include <panel.h>
+
+typedef struct Panel Panel;
+typedef struct Pev Pev;
+
+struct Panel {
+	int		id;
+	char*	name;
+	char*	path;
+	...
+};
+
+enum {
+	Elook,
+	Eexec,
+	Eclose,
+	Eclean,
+	Edirty,
+	Eintr,
+	Eclick,
+	Ekeys,
+	Nevs
+};
+
+struct Pev {
+	char*	path;
+	int		id;
+	int		ev;
+	char*	arg;
+};
+
+void		pclose(Panel* p);
+int		cols(char* scr, char** v, int nv);
+long		pdata(Panel* p, void* data, long cnt);
+Panel*	pnew(Panel* p, char* name, int id);
+Panel*	pnewnamed(Panel* p, char* name, int id);
+int		pctl(Panel* p, char* fmt, ...);
+Channel*	pevc(Panel* p);
+void		pevfree(Pev* ev);
+char*	pevname(int evid);
+Panel*	pinit(char* type, char* name);
+int		screens(char**v, int nv);
+char*	userscreen(void);
+int	oxctl(char* c);
+extern char* omero;
+
+.EE
+.SH DESCRIPTION
+.I Panel
+is a convenience module to implement user interfaces
+for the
+.I o/mero
+window system. This window system is implemented for
+the Octopus but can  be used from Plan 9 as well.
+These pages from the Octopus User's manual are relevant:
+.IR olive (1)
+for an introduction to the window system,
+.IR omero (4)
+for a description of the file system interface, and
+.IR ports (4)
+for a description of the file system used to receive events for
+the panels created by the application.
+.PP
+A
+.B Panel
+represents an
+.I o/mero
+panel. It corresponds to a directory in the
+.I o/mero
+file tree. The name of the panel, and its absolute path in the current name
+space are kept in
+.B Panel.name
+and
+.B Panel.path
+respectively.
+Applications may give identifiers (numbers) to omero panels. The
+identifier for a panel is kept in its
+.BR Panel.id .
+.PP
+Before using the library
+.I pinit
+but be called at least once, to initialize
+it and to create an initial panel. After this call, the global
+.B omero
+keeps the path to the omero file tree, as reported by the
+.B $omero
+environment variable.
+.I Pinit
+creates a directory in the
+.B /appl
+directory of omero to represent a top-level panel for the
+application. The
+.I name
+argument is used to name the panel (usually the program  name)
+by appending the PID of the caller. The
+.I type
+argument must be a valid panel type, e.g.,
+.LR row ,
+.LR draw ,
+etc.
+.I Pinit
+sets the panel
+application process id
+to that of the caller process and the panel id to zero.
+Also, it ensures that when the panel is closed the
+hierarchy it contains be removed.
+It is allowed to create multiple top-level panels if necessary.
+.PP
+A new panel may be created within panel
+.I p
+by calling
+.I pnew
+with an appropriate
+.I name
+and
+.IR id .
+The name given is randomized by the library, to make it unique and
+avoid conflicts in the file system.
+.I Pnewnamed
+is like
+.I pnew
+but it does not randomize the name. Note that unlike in
+.I pinit
+the
+.I name
+supplied must be a legal o/mero panel name. This means that it must
+include the prefix specifying the panel type. See
+.IR omero  (4)
+for a reference.
+.PP
+.I Pclose
+removes a panel and releases the memory holding the
+.B Panel
+structure. If events have been requested for the panel, the
+file representing the events port is also removed. Note that
+closing a panel would remove all the file tree rooted at the panel.
+.PP
+Sometimes it is useful to create a
+.I Panel
+structure
+for an panel that already exists in o/mero. To permit this, both
+.I pinit
+and
+.I pnew
+consider that when their
+.I name
+arguments are absolute paths to the panel, the panel already exists.
+In this case a
+.B Panel
+structure is built for the panel and returned, after checking out that
+the panel indeed exists.
+.PP
+Control and data files for a panel may be open and used by the application,
+by opening the files named
+.B ctl
+and
+.B data
+in the directory named by the
+.B path
+field of the panel.
+.PP
+.I Pctl
+issues a control request to the panel.
+It admits
+formatted output similar to
+.IR print (2).
+.PP
+.I Pdata
+updates the contents of the panel with those in
+.I data
+and returns the number of bytes written or -1 upon errors.
+.PP
+.I Pevc
+returns a channel that can be used to receive events for a panel
+.I p
+and all its
+inner panels. Most of the times this function is called once for the top-level panel
+returned by
+.IR pinit .
+The panel identifier
+contained in the omero event (or the panel path, also contained) can be used
+to demultiplex the event stream and locate the panel for an event.
+Each receive from the event channel returns a pointer to a
+.B  Pev
+structure kept in
+.I malloc
+memory. The receiver is responsible for releasing this memory by calling
+.I pevfree
+with the pointer received.
+.PP
+A panel event contains a
+.B path
+with the absolute path for the panel, an
+.I id
+with the id for the panel (or 0 if the identifier was not set in the panel by the
+application), an integer
+.B ev
+identifying the event type, and perhaps a single argument kept at
+.BR arg .
+The event types are described by the constants shown in the synopsis. See
+.IR  omero (4)
+for a full description. The function
+.I pevname
+may be used to obtain a string for each event type.
+.PP
+To make panels appear on a screen, replicas
+must be created at the desired location. To aid in locating an appropriate place,
+.I screens
+returns a list of o/mero screen names, and
+.I cols
+returns a list of paths for columns at the given screen name.
+.PP
+.I Userscreen
+returns the name of the last screen used, as reported by
+.BR /dev/sel .
+The string is allocated using
+.IR malloc (2)
+and must be free by the caller.
+.PP
+.I Oxctl
+executes the given argument as a control request in one of the
+.I Ox
+panels. This is useful to post
+.B Look
+or
+.B Exec
+events to make
+.I Ox
+open files or execute commands.
+.SH EXAMPLE
+The source for
+.IR oclock (1)
+is a simple example. It can be found at
+.B /sys/src/cmd/o/clock.c
+.SH SOURCE
+.B /sys/src/libpanel
+.SH SEE ALSO
+.IR olive (1),
+.IR omero (4),
+and
+.IR  ports  (4)
+in the  Octopus User's Manual.
+

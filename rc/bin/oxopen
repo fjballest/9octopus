@@ -1,0 +1,12 @@
+#!/bin/rc
+if(~ $#* 0){
+	cat >/tmp/oxopen
+	files=(/tmp/oxopen)
+}
+if not
+	files=$*
+if(test -e /mnt/ui/appl/*ox*/ctl){
+	ox=`{ls -d /mnt/ui/appl/*ox*/ctl | sed 1q}
+	for(file in $files)
+		echo look $file >$ox
+}

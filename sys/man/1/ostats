@@ -1,0 +1,54 @@
+.TH OSTATS 1
+.SH NAME
+ostats, o/stats \- display system statistics in omero
+.SH SYNOPSIS
+.B ostats
+[
+.BI - option
+]
+[
+.I machine
+\&...
+]
+.PP
+.B o/stats
+[
+.BI - option
+]
+[
+.I machine
+\&...
+]
+.SH DESCRIPTION
+.I Ostats
+is like
+.IR stats (4)
+but uses
+.IR omero (1)
+as the user interface service, instead of the native graphics system. Options
+are like in
+.IR stats (4).
+.PP
+.IR O/stats
+is similar, but uses the Octopus implementation for
+.IR omero (4)
+instead.
+The interface is shown on the last screen with user activity unless
+.B $omerodir
+is set to the path of a row or column where to create the interface (relative to
+the root of the
+.I o/mero
+file system).
+.SH SOURCE
+.B /sys/src/cmd/ostats.c
+.br
+.B /sys/src/cmd/o/stats.c
+.SH SEE ALSO
+.IR stats (8)
+and
+.IR omero (1).
+.SH BUGS
+.I Ostats
+must de deprecated in favor of
+.IR o/stats .
+

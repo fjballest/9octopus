@@ -1,0 +1,21 @@
+</$objtype/mkfile
+
+LIB=/$objtype/lib/libpanel.a
+OFILES=\
+	panel.$O\
+	screens.$O\
+	cols.$O\
+	pctl.$O\
+	pev.$O\
+	pnamed.$O\
+	oxctl.$O\
+
+HFILES=/sys/include/panel.h
+
+UPDATE=\
+	mkfile\
+	$HFILES\
+	${OFILES:%.$O=%.c}\
+	${LIB:/$objtype/%=/386/%}\
+
+</sys/src/cmd/mksyslib

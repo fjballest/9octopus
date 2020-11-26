@@ -1,0 +1,38 @@
+.TH OCLOCK 1
+.SH NAME
+oclock, o/clock \- Omero analog clock interface
+.SH SYNOPSIS
+.B oclock
+[
+.B -d
+]
+.PP
+.B o/clock
+[
+.B -d
+]
+.SH DESCRIPTION
+.I Oclock
+is a program that provides an analog clock for
+.IR omero (1).
+.I O/clock
+is similar, but uses the Octopus implementation of
+.IR omero (4)
+instead. 
+Besides interface replication and destruction, there is no user interaction.
+.PP
+The interface is shown on the last screen with user activity unless
+.B $omerodir
+is set to the path of a row or column where to create the interface (relative to
+the root of the
+.I o/mero
+file system).
+.SH SOURCE
+.B /sys/src/cmd/oclock.c
+.SH "SEE ALSO"
+.IR omero (1)
+.SH BUGS
+.I Oclock
+must be deprecated in favor of
+.IR o/clock .
+

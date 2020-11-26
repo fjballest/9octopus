@@ -1,0 +1,17 @@
+</$objtype/mkfile
+
+TARG=\
+	clock\
+	stats\
+	faces\
+	users\
+	player\
+
+OFILES=
+HFILES=/sys/include/panel.h
+BIN=/$objtype/bin/o
+
+</sys/src/cmd/mkmany
+
+
+
